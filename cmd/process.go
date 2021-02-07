@@ -6,6 +6,7 @@ import (
 	"github.com/signintech/gopdf"
 	"github.com/spf13/cobra"
 	"image"
+	"image/jpeg"
 	"image/png"
 	"log"
 	"os"
@@ -27,8 +28,10 @@ func Execute() {
 			var err error
 			fileName := args[0]
 
+			fileParts := strings.Split(fileName, ".")
+			fileType := fileParts[len(fileParts)-1]
+
 			if outputFile == "" {
-				fileParts := strings.Split(fileName, ".")
 				fileParts[len(fileParts)-1] = "pdf"
 				outputFile = strings.Join(fileParts, ".")
 			}
@@ -85,8 +88,21 @@ func Execute() {
 					log.Fatal(err)
 				}
 
-				err = png.Encode(fo, cImg)
-				fo.Close()
+				defer fo.Close()
+				defer os.Remove(tmpFile)
+
+				switch fileType {
+				case "jpeg", "jpg":
+					err = jpeg.Encode(fo, cImg, &jpeg.Options{100})
+				case "png":
+					err = png.Encode(fo, cImg)
+				default:
+					log.Fatal("unsupported image format:", fileType)
+				}
+
+				if err != nil {
+					log.Fatal(err)
+				}
 
 				pdf.AddPage()
 
@@ -104,8 +120,6 @@ func Execute() {
 				if err != nil {
 					log.Fatal(err)
 				}
-
-				defer os.Remove(tmpFile)
 			}
 
 			pdf.WritePdf(outputFile)
