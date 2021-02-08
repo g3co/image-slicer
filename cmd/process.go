@@ -36,26 +36,24 @@ func Execute() {
 				outputFile = strings.Join(fileParts, ".")
 			}
 
-			fmt.Println(border)
+			imgSourceFile, err := os.Open(fileName)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer imgSourceFile.Close()
 
-			f, err := os.Open(fileName)
-			defer f.Close()
+			img, _, err := image.Decode(imgSourceFile)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			img, _, err := image.Decode(f)
+			cfgSourceFile, err := os.Open(fileName)
 			if err != nil {
 				log.Fatal(err)
 			}
+			defer cfgSourceFile.Close()
 
-			fconf, err := os.Open(fileName)
-			defer fconf.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			cfg, _, err := image.DecodeConfig(fconf)
+			cfg, _, err := image.DecodeConfig(cfgSourceFile)
 			if err != nil {
 				log.Fatal(err)
 			}
